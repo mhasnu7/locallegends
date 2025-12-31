@@ -64,14 +64,14 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: Colors.secondary,
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
     borderRadius: Spacing.xs,
   },
   buttonText: {
     color: Colors.cardBackground,
     fontWeight: '600',
-    fontSize: Spacing.sm,
+    fontSize: 14,
   },
 });
 

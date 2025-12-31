@@ -1,28 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Alert } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
 import { Colors } from '../theme/colors';
 import { Spacing } from '../theme/spacing';
+import { addRequest } from '../data/requests';
+import LocationForm, { LocationData } from '../components/LocationForm';
 
-type AddRequestScreenProps = StackScreenProps<RootStackParamList, 'AddRequest'>;
+// Fix TS error by using 'any' for route.params temporarily if RootStackParamList modification is later
+type AddRequestScreenProps = StackScreenProps<any, 'AddRequest'>;
 
 const AddRequestScreen: React.FC<AddRequestScreenProps> = ({ route, navigation }) => {
-  const { serviceName } = route.params;
+  const { serviceName } = route.params || { serviceName: 'Service' };
 
   const [userName, setUserName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [address, setAddress] = useState('');
   const [description, setDescription] = useState('');
+  
+  const [address, setAddress] = useState('');
+  const [area, setArea] = useState('');
+  const [landmark, setLandmark] = useState('');
+  const [city, setCity] = useState('');
+  const [pincode, setPincode] = useState('');
 
   const handleSubmit = () => {
-    if (!userName || !phoneNumber || !address || !description) {
+    const isLocationValid = 
+      address.trim() && 
+      area.trim() && 
+      city.trim() && 
+      pincode.trim();
+
+    if (!userName || !phoneNumber || !description || !isLocationValid) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
-    // In a real app, we would save this to a backend or local store
-    // For now, we just show a success message
+    addRequest({
+      serviceType: serviceName,
+      description: description,
+      phone: phoneNumber,
+      // @ts-ignore - passing extra info for record keeping if needed
+      userName,
+      address: `${address}, ${area}, ${city} - ${pincode}`,
+      location: { address, area, landmark, city, pincode } as LocationData,
+      // Assuming no GPS coordinates are set for simplicity on this screen
+    } as any);
+
     Alert.alert(
       'Success',
       'Your request has been submitted successfully!',
@@ -35,9 +57,11 @@ const AddRequestScreen: React.FC<AddRequestScreenProps> = ({ route, navigation }
     );
   };
 
+  const isFormValid = !!(userName && phoneNumber && description && address && area && city && pincode);
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <Text style={styles.title}>Submit Request</Text>
         
         <View style={styles.formGroup}>
@@ -70,15 +94,18 @@ const AddRequestScreen: React.FC<AddRequestScreenProps> = ({ route, navigation }
           />
         </View>
 
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Address</Text>
-          <TextInput
-            style={styles.input}
-            value={address}
-            onChangeText={setAddress}
-            placeholder="Enter your address"
-          />
-        </View>
+        <LocationForm 
+          address={address}
+          setAddress={setAddress}
+          area={area}
+          setArea={setArea}
+          landmark={landmark}
+          setLandmark={setLandmark}
+          city={city}
+          setCity={setCity}
+          pincode={pincode}
+          setPincode={setPincode}
+        />
 
         <View style={styles.formGroup}>
           <Text style={styles.label}>Description of Request</Text>
@@ -92,7 +119,11 @@ const AddRequestScreen: React.FC<AddRequestScreenProps> = ({ route, navigation }
           />
         </View>
 
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+        <TouchableOpacity 
+          style={[styles.submitButton, !isFormValid && styles.disabledButton]} 
+          onPress={handleSubmit}
+          disabled={!isFormValid}
+        >
           <Text style={styles.submitButtonText}>Submit Request</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -106,29 +137,29 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   scrollContent: {
-    padding: Spacing.medium,
+    padding: Spacing.md,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     color: Colors.textPrimary,
-    marginBottom: Spacing.large,
+    marginBottom: Spacing.lg,
   },
   formGroup: {
-    marginBottom: Spacing.medium,
+    marginBottom: Spacing.md,
   },
   label: {
     fontSize: 14,
     color: Colors.textSecondary,
     fontWeight: '600',
-    marginBottom: Spacing.tiny,
+    marginBottom: Spacing.xs,
   },
   input: {
     backgroundColor: Colors.white,
     borderWidth: 1,
     borderColor: Colors.border,
-    borderRadius: Spacing.small,
-    padding: Spacing.medium,
+    borderRadius: Spacing.xs,
+    padding: Spacing.md,
     fontSize: 16,
     color: Colors.textPrimary,
   },
@@ -142,11 +173,15 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     backgroundColor: Colors.primary,
-    padding: Spacing.medium,
-    borderRadius: Spacing.small,
+    padding: Spacing.md,
+    borderRadius: Spacing.xs,
     alignItems: 'center',
-    marginTop: Spacing.large,
-    marginBottom: Spacing.extraLarge,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.xl,
+  },
+  disabledButton: {
+    backgroundColor: Colors.textSecondary,
+    opacity: 0.6,
   },
   submitButtonText: {
     color: Colors.white,

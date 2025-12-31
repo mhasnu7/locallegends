@@ -9,7 +9,7 @@ export interface Request {
 }
 
 // Renamed from initialRequests to REQUESTS as expected by consumers
-export const REQUESTS: Request[] = [
+export let REQUESTS: Request[] = [
   {
     id: 'req001',
     serviceType: 'Plumbing',
@@ -68,12 +68,13 @@ export const AVAILABLE_FILTERS = [
 export const addRequest = (newRequest: Omit<Request, 'id'>): Request => {
   const id = `req${Date.now()}${Math.floor(Math.random() * 1000)}`;
   const request: Request = {
-    id,
-    status: 'Pending',
-    provider: null, // New requests are unassigned by default
     ...newRequest,
+    id,
+    status: newRequest.status || 'Pending',
+    provider: newRequest.provider || null, // New requests are unassigned by default
   };
-  // In a real app, this would call a backend. Here, we just log and return.
+  // In a real app, this would call a backend. Here, we update the local list and log.
+  REQUESTS = [request, ...REQUESTS];
   console.log('Request Added:', request);
   return request;
 };

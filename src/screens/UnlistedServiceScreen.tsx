@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import { Spacing } from '../theme/spacing';
 import { Colors, styles as globalStyles } from '../theme/colors';
 import { addRequest } from '../data/requests';
+import LocationForm, { LocationData } from '../components/LocationForm';
 
 type UnlistedServiceScreenProps = StackScreenProps<RootStackParamList, 'UnlistedService'>;
 
@@ -22,10 +23,27 @@ const UnlistedServiceScreen: React.FC<UnlistedServiceScreenProps> = ({ navigatio
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [phone, setPhone] = useState('');
+  const [location, setLocation] = useState<LocationData>({
+    address: '',
+    area: '',
+    landmark: '',
+    city: '',
+    pincode: '',
+  });
+
+  const handleLocationChange = useCallback((newLocation: LocationData) => {
+    setLocation(newLocation);
+  }, []);
 
   const handleSubmit = () => {
-    if (!title || !description || !phone) {
-      Alert.alert('Error', 'Please fill in all fields');
+    const isLocationValid = 
+      location.address.trim() && 
+      location.area.trim() && 
+      location.city.trim() && 
+      location.pincode.trim();
+
+    if (!title.trim() || !description.trim() || !phone.trim() || !isLocationValid) {
+      Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
 
@@ -35,9 +53,11 @@ const UnlistedServiceScreen: React.FC<UnlistedServiceScreenProps> = ({ navigatio
         serviceName: title,
         userName: 'User', // Placeholder
         phone: phone,
-        address: 'N/A',
+        address: `${location.address}, ${location.area}, ${location.city} - ${location.pincode}`,
+        location: location, // Storing full location object
         description: description,
-      },
+      } as any,
+      // @ts-ignore
       () => {
         navigation.navigate('Home');
       }
@@ -62,6 +82,7 @@ const UnlistedServiceScreen: React.FC<UnlistedServiceScreenProps> = ({ navigatio
             placeholder="e.g., Solar Panel Cleaning"
             value={title}
             onChangeText={setTitle}
+            placeholderTextColor={Colors.textSecondary}
           />
 
           <Text style={styles.label}>Detailed Description</Text>
@@ -73,6 +94,7 @@ const UnlistedServiceScreen: React.FC<UnlistedServiceScreenProps> = ({ navigatio
             multiline
             numberOfLines={4}
             textAlignVertical="top"
+            placeholderTextColor={Colors.textSecondary}
           />
 
           <Text style={styles.label}>Contact Phone Number</Text>
@@ -82,7 +104,10 @@ const UnlistedServiceScreen: React.FC<UnlistedServiceScreenProps> = ({ navigatio
             value={phone}
             onChangeText={setPhone}
             keyboardType="phone-pad"
+            placeholderTextColor={Colors.textSecondary}
           />
+
+          <LocationForm onLocationChange={handleLocationChange} />
 
           <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
             <Text style={styles.submitButtonText}>Submit Request</Text>

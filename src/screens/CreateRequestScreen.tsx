@@ -1,35 +1,52 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Alert, PermissionsAndroid, Platform } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { addRequest } from '../data/requests';
 import { Spacing } from '../theme/spacing';
 import { Colors, styles as globalStyles } from '../theme/colors';
-import LocationForm, { LocationData } from '../components/LocationForm';
+import LocationForm from '../components/LocationForm';
 import Geolocation from '@react-native-community/geolocation';
 
 type CreateRequestScreenProps = StackScreenProps<RootStackParamList, 'CreateRequest'>;
 
+const FormField: React.FC<{ label: string; value: string; onChangeText: (text: string) => void; multiline?: boolean; keyboardType?: 'default' | 'phone-pad' }> = ({
+  label,
+  value,
+  onChangeText,
+  multiline = false,
+  keyboardType = 'default',
+}) => (
+  <View style={styles.formGroup}>
+    <Text style={styles.label}>{label}</Text>
+    <TextInput
+      style={[styles.input, multiline && styles.multilineInput]}
+      value={value}
+      onChangeText={onChangeText}
+      multiline={multiline}
+      numberOfLines={multiline ? 4 : 1}
+      placeholder={`Enter ${label.toLowerCase()}`}
+      placeholderTextColor={Colors.textSecondary}
+      keyboardType={keyboardType}
+    />
+  </View>
+);
+
 const CreateRequestScreen: React.FC<CreateRequestScreenProps> = ({ route, navigation }) => {
-  const { serviceId, serviceName } = route.params;
+  const { serviceId, serviceName } = route.params as { serviceId: string, serviceName: string };
 
   const [userName, setUserName] = useState('');
   const [phone, setPhone] = useState('');
   const [description, setDescription] = useState('');
-  const [location, setLocation] = useState<LocationData>({
-    address: '',
-    area: '',
-    landmark: '',
-    city: '',
-    pincode: '',
-  });
+  const [address, setAddress] = useState('');
+  const [area, setArea] = useState('');
+  const [landmark, setLandmark] = useState('');
+  const [city, setCity] = useState('');
+  const [pincode, setPincode] = useState('');
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [locationConfirmation, setLocationConfirmation] = useState<string | null>(null);
-
-  const handleLocationChange = useCallback((newLocation: LocationData) => {
-    setLocation(newLocation);
-  }, []);
+  const [currentStep, setCurrentStep] = useState(1); // 1: Personal Info, 2: Location & Description
 
   const requestLocationPermission = async (): Promise<boolean> => {
     if (Platform.OS === 'android') {
@@ -50,7 +67,6 @@ const CreateRequestScreen: React.FC<CreateRequestScreenProps> = ({ route, naviga
         return false;
       }
     }
-    // For other platforms, assume permission is handled elsewhere or is not required for this Android-first constraint
     return true; 
   };
 
@@ -82,12 +98,11 @@ const CreateRequestScreen: React.FC<CreateRequestScreenProps> = ({ route, naviga
   };
 
   const handleSubmit = () => {
-    // Location (address/area/etc) is required, but GPS coords are optional
     const isLocationValid = 
-      location.address.trim() && 
-      location.area.trim() && 
-      location.city.trim() && 
-      location.pincode.trim();
+      address.trim() && 
+      area.trim() && 
+      city.trim() && 
+      pincode.trim();
 
     if (!userName || !phone || !description || !isLocationValid) {
       Alert.alert('Missing Fields', 'Please fill in all required fields including location details.');
@@ -100,82 +115,90 @@ const CreateRequestScreen: React.FC<CreateRequestScreenProps> = ({ route, naviga
         serviceName,
         userName,
         phone,
-        address: `${location.address}, ${location.area}, ${location.city} - ${location.pincode}`,
-        location: location,
+        address: `${address}, ${area}, ${city} - ${pincode}`,
+        location: { address, area, landmark, city, pincode },
         description,
-        // Add optional coordinates to the request payload
         latitude,
         longitude,
-      } as any,
-      // @ts-ignore - existing code uses callback but implementation doesn't seem to support it
-      () => {
-        navigation.popToTop(); 
-      }
+      } as any
     );
+    navigation.popToTop(); 
   };
 
-  const FormField: React.FC<{ label: string; value: string; onChangeText: (text: string) => void; multiline?: boolean; keyboardType?: 'default' | 'phone-pad' }> = ({
-    label,
-    value,
-    onChangeText,
-    multiline = false,
-    keyboardType = 'default',
-  }) => (
-    <View style={styles.formGroup}>
-      <Text style={styles.label}>{label}</Text>
-      <TextInput
-        style={[styles.input, multiline && styles.multilineInput]}
-        value={value}
-        onChangeText={onChangeText}
-        multiline={multiline}
-        numberOfLines={multiline ? 4 : 1}
-        placeholder={`Enter ${label.toLowerCase()}`}
-        placeholderTextColor={Colors.textSecondary}
-        keyboardType={keyboardType}
-      />
-    </View>
-  );
+  const handleNext = () => {
+    if (!userName.trim() || !phone.trim()) {
+      Alert.alert('Required Details', 'Please enter your name and phone number before proceeding.');
+      return;
+    }
+    setCurrentStep(2);
+  };
 
   return (
     <View style={globalStyles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="always">
         <Text style={styles.serviceTitle}>Requesting: {serviceName}</Text>
         
-        <FormField
-          label="User Name"
-          value={userName}
-          onChangeText={setUserName}
-        />
-        
-        <FormField
-          label="Phone Number"
-          value={phone}
-          onChangeText={setPhone}
-          keyboardType="phone-pad"
-        />
+        {currentStep === 1 ? (
+          <View>
+            <FormField
+              label="User Name"
+              value={userName}
+              onChangeText={setUserName}
+            />
+            
+            <FormField
+              label="Phone Number"
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+            />
 
-        {/* Existing Location Form */}
-        <LocationForm onLocationChange={handleLocationChange} />
+            <TouchableOpacity style={styles.submitButton} onPress={handleNext}>
+              <Text style={styles.submitButtonText}>Next Section</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View>
+            <TouchableOpacity 
+              style={styles.backButton} 
+              onPress={() => setCurrentStep(1)}
+            >
+              <Text style={styles.backButtonText}>← Edit Name & Phone</Text>
+            </TouchableOpacity>
 
-        {/* New Location Feature UI */}
-        <TouchableOpacity style={styles.locationButton} onPress={handleUseCurrentLocation}>
-          <Text style={styles.locationButtonText}>Use My Current Location</Text>
-        </TouchableOpacity>
-        
-        {locationConfirmation && (
-          <Text style={styles.confirmationText}>{locationConfirmation}</Text>
+            <LocationForm 
+              address={address}
+              setAddress={setAddress}
+              area={area}
+              setArea={setArea}
+              landmark={landmark}
+              setLandmark={setLandmark}
+              city={city}
+              setCity={setCity}
+              pincode={pincode}
+              setPincode={setPincode}
+            />
+
+            <TouchableOpacity style={styles.locationButton} onPress={handleUseCurrentLocation}>
+              <Text style={styles.locationButtonText}>Use My Current Location</Text>
+            </TouchableOpacity>
+            
+            {locationConfirmation && (
+              <Text style={styles.confirmationText}>{locationConfirmation}</Text>
+            )}
+
+            <FormField
+              label="Request Description"
+              value={description}
+              onChangeText={setDescription}
+              multiline={true}
+            />
+
+            <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+              <Text style={styles.submitButtonText}>Submit Request</Text>
+            </TouchableOpacity>
+          </View>
         )}
-
-        <FormField
-          label="Request Description"
-          value={description}
-          onChangeText={setDescription}
-          multiline={true}
-        />
-
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitButtonText}>Submit Request</Text>
-        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -216,7 +239,6 @@ const styles = StyleSheet.create({
     height: 100,
     textAlignVertical: 'top',
   },
-  // New styles for location feature
   locationButton: {
     backgroundColor: Colors.secondary,
     padding: Spacing.sm,
@@ -236,7 +258,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: Spacing.md,
   },
-  // Existing submit button styles
   submitButton: {
     backgroundColor: Colors.primary,
     padding: Spacing.md,
@@ -248,6 +269,15 @@ const styles = StyleSheet.create({
     color: Colors.cardBackground,
     fontSize: Spacing.lg,
     fontWeight: 'bold',
+  },
+  backButton: {
+    marginBottom: Spacing.md,
+    paddingVertical: Spacing.xs,
+  },
+  backButtonText: {
+    color: Colors.primary,
+    fontSize: Spacing.md,
+    fontWeight: '600',
   },
 });
 

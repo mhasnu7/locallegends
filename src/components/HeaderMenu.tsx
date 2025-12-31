@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -20,6 +20,7 @@ interface HeaderMenuProps {
   onNavigateToService: (service: Service) => void;
   onNavigateToAbout: () => void;
   onNavigateToPrivacy: () => void;
+  onNavigateToForumList: () => void;
   onLogin: () => void;
   onAdminLogin: () => void;
   onLogout: () => void;
@@ -34,6 +35,7 @@ const HeaderMenu: React.FC<HeaderMenuProps> = ({
   onNavigateToService,
   onNavigateToAbout,
   onNavigateToPrivacy,
+  onNavigateToForumList,
   onLogin,
   onAdminLogin,
   onLogout,
@@ -41,7 +43,7 @@ const HeaderMenu: React.FC<HeaderMenuProps> = ({
   isAdmin,
   services,
 }) => {
-  const [shouldRender, setShouldRender] = React.useState(isVisible);
+  const [shouldRender, setShouldRender] = useState(isVisible);
   const animatedValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -49,25 +51,21 @@ const HeaderMenu: React.FC<HeaderMenuProps> = ({
       setShouldRender(true);
       Animated.timing(animatedValue, {
         toValue: 1,
-        duration: 300,
+        duration: 250,
         useNativeDriver: true,
       }).start();
     } else {
       Animated.timing(animatedValue, {
         toValue: 0,
-        duration: 300,
+        duration: 250,
         useNativeDriver: true,
       }).start(({ finished }) => {
-        if (finished) {
-          setShouldRender(false);
-        }
+        if (finished) setShouldRender(false);
       });
     }
-  }, [isVisible, animatedValue]);
+  }, [isVisible]);
 
-  if (!shouldRender) {
-    return null;
-  }
+  if (!shouldRender) return null;
 
   const translateY = animatedValue.interpolate({
     inputRange: [0, 1],
@@ -80,7 +78,11 @@ const HeaderMenu: React.FC<HeaderMenuProps> = ({
   });
 
   const menuItems = [
-    { label: isLoggedIn ? 'Logout' : 'User Login', onPress: isLoggedIn ? onLogout : onLogin },
+    { label: 'Forum', onPress: onNavigateToForumList },
+    {
+      label: isLoggedIn ? 'Logout' : 'User Login',
+      onPress: isLoggedIn ? onLogout : onLogin,
+    },
     ...(isAdmin ? [{ label: 'Admin Login', onPress: onAdminLogin }] : []),
     ...services.map((service) => ({
       label: service.serviceName,
@@ -95,16 +97,14 @@ const HeaderMenu: React.FC<HeaderMenuProps> = ({
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.overlay} />
       </TouchableWithoutFeedback>
+
       <Animated.View
         style={[
           styles.menuContainer,
-          {
-            opacity,
-            transform: [{ translateY }],
-          },
+          { opacity, transform: [{ translateY }] },
         ]}
       >
-        <ScrollView style={styles.scrollView} bounces={false}>
+        <ScrollView bounces={false}>
           {menuItems.map((item, index) => (
             <MenuItem
               key={`${item.label}-${index}`}
@@ -125,25 +125,18 @@ const HeaderMenu: React.FC<HeaderMenuProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.1)',
+    backgroundColor: 'rgba(0,0,0,0.15)',
   },
   menuContainer: {
     position: 'absolute',
-    top: 60, // Adjust based on header height
+    top: 60,
     right: Spacing.md,
-    width: 250,
+    width: 260,
     maxHeight: SCREEN_HEIGHT * 0.7,
     backgroundColor: Colors.cardBackground,
     borderRadius: Spacing.sm,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    elevation: 6,
     overflow: 'hidden',
-  },
-  scrollView: {
-    flexGrow: 0,
   },
 });
 

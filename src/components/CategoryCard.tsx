@@ -18,11 +18,17 @@ const getEmojiForCategory = (iconName: string): string => {
     case 'broom': return '🧹'; // Cleaning
     case 'saw-blade': return '🪚'; // Carpentry
     case 'format-paint': return '🎨'; // Painting
-    case 'leaf': return '🍃'; // Gardening
+    case 'flower-tulip-outline': return '🌸'; // Flower Decoration
     case 'factory': return '🏭'; // Metal Fabrication
     case 'food-variant': return '🍽️'; // Catering
     case 'warehouse': return '📦'; // Wholesale Goods Purchase
     case 'car': return '🚗'; // Vehicle Rental
+    case 'wall': return '🏗️'; // POP & False Ceiling
+    case 'video-security': return '📹'; // CCTV
+    case 'laptop': return '💻'; // CSC Services
+    case 'airplane': return '✈️'; // Travel Arrangements
+    case 'fruit-cherries': return '🍒'; // Exotic Fruits
+    case 'printer': return '🖨️'; // Printing & Signage
     default: return '❓'; // Default unknown icon
   }
 };

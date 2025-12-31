@@ -5,6 +5,7 @@ export const Colors = {
   primary: '#007AFF', // A standard vibrant blue
   secondary: '#5856D6', // A nice purple/indigo for accents
   background: '#F5F5F7', // Light grey background
+  white: '#FFFFFF', // Pure white color
   cardBackground: '#FFFFFF', // White for cards
   textPrimary: '#1C1C1E', // Dark text
   textSecondary: '#8E8E93', // Grey text for subtitles

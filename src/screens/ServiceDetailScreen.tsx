@@ -31,6 +31,22 @@ const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({ route, naviga
     Linking.openURL(`tel:${service.phone}`);
   };
 
+  const handleWhatsApp = () => {
+    // Clean the phone number (remove spaces, etc.)
+    const cleanPhone = service.phone.replace(/\D/g, '');
+    // WhatsApp URL scheme (works for both Android and iOS)
+    const url = `whatsapp://send?phone=${cleanPhone}`;
+    
+    Linking.canOpenURL(url).then(supported => {
+      if (supported) {
+        return Linking.openURL(url);
+      } else {
+        // Fallback to web URL if WhatsApp app is not installed
+        return Linking.openURL(`https://wa.me/${cleanPhone}`);
+      }
+    });
+  };
+
   const DetailItem: React.FC<{ label: string; value: string }> = ({ label, value }) => (
     <View style={styles.detailItem}>
       <Text style={styles.label}>{label}</Text>
@@ -55,6 +71,11 @@ const ServiceDetailScreen: React.FC<ServiceDetailScreenProps> = ({ route, naviga
           <TouchableOpacity style={styles.callButton} onPress={handleCall}>
             <Text style={styles.callButtonEmoji}>📞</Text>
             <Text style={styles.callButtonText}>Call Provider</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.whatsappButton} onPress={handleWhatsApp}>
+            <Text style={styles.whatsappButtonEmoji}>💬</Text>
+            <Text style={styles.whatsappButtonText}>Chat on WhatsApp</Text>
           </TouchableOpacity>
         </View>
 
@@ -143,6 +164,25 @@ const styles = StyleSheet.create({
     fontSize: Spacing.md,
   },
   callButtonEmoji: {
+    fontSize: 20,
+    color: Colors.cardBackground,
+  },
+  whatsappButton: {
+    flexDirection: 'row',
+    backgroundColor: '#25D366', // WhatsApp green
+    padding: Spacing.md,
+    borderRadius: Spacing.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: Spacing.sm,
+  },
+  whatsappButtonText: {
+    color: Colors.cardBackground,
+    fontWeight: 'bold',
+    marginLeft: Spacing.sm,
+    fontSize: Spacing.md,
+  },
+  whatsappButtonEmoji: {
     fontSize: 20,
     color: Colors.cardBackground,
   },

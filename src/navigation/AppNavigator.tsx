@@ -8,7 +8,12 @@ import ServiceDetailScreen from '../screens/ServiceDetailScreen';
 import CreateRequestScreen from '../screens/CreateRequestScreen';
 import AdminDashboardScreen from '../screens/AdminDashboardScreen';
 import UnlistedServiceScreen from '../screens/UnlistedServiceScreen';
+import ForumListScreen from '../screens/forum/ForumListScreen';
+import ForumDetailScreen from '../screens/forum/ForumDetailScreen';
+import CreateForumPostScreen from '../screens/forum/CreateForumPostScreen';
+import GalleryScreen from '../screens/GalleryScreen';
 import { Colors } from '../theme/colors';
+import { ForumPost } from '../data/forumMockData';
 import { Spacing } from '../theme/spacing';
 import { TouchableOpacity, Text } from 'react-native';
 
@@ -18,9 +23,14 @@ export type RootStackParamList = {
   Home: { toggleMenu: () => void } | undefined;
   ServiceList: { categoryId: string; categoryName: string };
   ServiceDetail: { serviceId: string };
-  CreateRequest: { serviceId: string; serviceName: string };
+  AddRequest: { serviceName: string }; // Changed from CreateRequest to AddRequest based on usage in AddRequestScreen
+  CreateRequest: { serviceId: string; serviceName: string }; // Keeping CreateRequest for compatibility if it's used elsewhere
   AdminDashboard: undefined;
   UnlistedService: undefined;
+  ForumList: undefined;
+  CreateForumPost: undefined;
+  ForumDetail: { post: ForumPost };
+  Gallery: { categoryId: string; categoryTitle: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -91,6 +101,26 @@ const AppNavigator: React.FC = () => {
           name="UnlistedService"
           component={UnlistedServiceScreen}
           options={{ title: 'Request Unlisted Service' }}
+        />
+        <Stack.Screen
+          name="ForumList"
+          component={ForumListScreen}
+          options={{ title: 'Community Forum' }}
+        />
+        <Stack.Screen
+          name="CreateForumPost"
+          component={CreateForumPostScreen}
+          options={{ title: 'Ask a Question' }}
+        />
+        <Stack.Screen
+          name="ForumDetail"
+          component={ForumDetailScreen}
+          options={{ title: 'Question Details' }}
+        />
+        <Stack.Screen
+          name="Gallery"
+          component={GalleryScreen}
+          options={({ route }) => ({ title: route.params.categoryTitle + ' Gallery' })}
         />
       </Stack.Navigator>
     </NavigationContainer>
