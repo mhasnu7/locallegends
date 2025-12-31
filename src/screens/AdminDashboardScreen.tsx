@@ -9,9 +9,17 @@ import {
   Linking,
   Platform,
   Alert,
+  TextInput,
+  Modal,
 } from 'react-native';
 // import Ionicons from 'react-native-vector-icons/Ionicons'; // Removed
 import { REQUESTS, AVAILABLE_FILTERS, Request } from '../data/requests';
+
+// --- Auth Config ---
+const ADMIN_CREDENTIALS = {
+  username: 'mhasnuddin7@gmail.com',
+  password: 'Local@123',
+};
 
 // Helper function to map Ionicons names to emojis
 // Note: This helper is no longer used for dynamic icon name to emoji mapping directly
@@ -157,6 +165,19 @@ const AdminDashboardScreen: React.FC = () => {
   const [requests, setRequests] = useState<Request[]>(REQUESTS); 
   const [filter, setFilter] = useState<'All' | string>('All');
 
+  // Auth State
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleLogin = () => {
+    if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+      setIsAuthenticated(true);
+    } else {
+      Alert.alert('Login Failed', 'Invalid username or password');
+    }
+  };
+
   // Feature 3: Filtering Logic
   const filteredRequests = useMemo(() => {
     if (filter === 'All') {
@@ -208,10 +229,49 @@ const AdminDashboardScreen: React.FC = () => {
     </View>
   );
 
+  if (!isAuthenticated) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.loginContainer}>
+          <Text style={styles.title}>Admin Login</Text>
+          <View style={styles.inputWrapper}>
+            <Text style={styles.label}>Email Address</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter admin email"
+              value={username}
+              onChangeText={setUsername}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
+          </View>
+          <View style={styles.inputWrapper}>
+            <Text style={styles.label}>Password</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
+          </View>
+          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+            <Text style={styles.loginButtonText}>Login</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <Text style={styles.title}>Admin Dashboard</Text>
+        <View style={styles.adminHeader}>
+          <Text style={styles.title}>Admin Dashboard</Text>
+          <TouchableOpacity style={styles.logoutBtn} onPress={() => setIsAuthenticated(false)}>
+            <Text style={styles.logoutBtnText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Feature 3: Provider-Wise Filtering */}
         {renderFilterButtons()}
@@ -241,11 +301,65 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
+  adminHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  logoutBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: '#FF3B30',
+    borderRadius: 8,
+  },
+  logoutBtnText: {
+    color: '#FFF',
+    fontWeight: '600',
+    fontSize: 14,
+  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 15,
     color: '#333',
+  },
+  // Login Styles
+  loginContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 20,
+    backgroundColor: '#FFF',
+  },
+  inputWrapper: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#CCC',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: '#000',
+    backgroundColor: '#F9F9F9',
+  },
+  loginButton: {
+    backgroundColor: '#007BFF',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  loginButtonText: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   // Filtering Styles
   filterContainer: {

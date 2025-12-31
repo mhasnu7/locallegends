@@ -83,9 +83,29 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   };
 
   const handleAdminLogin = () => {
-    setIsLoggedIn(true);
-    setIsAdmin(true);
-    Alert.alert('Admin Login', 'Admin logged in (mock)');
+    Alert.prompt(
+      'Admin Login',
+      'Enter admin password',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Login',
+          onPress: (password?: string) => {
+            if (password === 'Local@123') {
+              setIsLoggedIn(true);
+              setIsAdmin(true);
+              Alert.alert('Admin Login', 'Admin logged in successfully');
+            } else {
+              Alert.alert('Login Failed', 'Invalid password');
+            }
+          },
+        },
+      ],
+      'secure-text'
+    );
   };
 
   const handleLogout = () => {
@@ -131,7 +151,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             {/* 🛠 Admin Dashboard */}
             <TouchableOpacity
               style={styles.adminButton}
-              onPress={() => navigation.navigate('AdminDashboard')}
+              onPress={() => {
+                if (isAdmin) {
+                  navigation.navigate('AdminDashboard');
+                } else {
+                  Alert.alert('Admin Access', 'Please login as an admin from the menu to access this section.');
+                }
+              }}
             >
               <Text style={styles.adminButtonText}>
                 Go to Admin Dashboard
